@@ -17,6 +17,7 @@ class LightBoard
     Light lights[BOARD_SIZE][BOARD_SIZE];
     void markGroups();
     void markAround(int, int, int);
+    int gNumAt(int, int);
 
   public:
     LightBoard(bool[BOARD_SIZE][BOARD_SIZE]);
@@ -31,13 +32,13 @@ LightBoard::LightBoard(bool l[BOARD_SIZE][BOARD_SIZE])
     {
         for (int c = 0; c < BOARD_SIZE; c++)
         {
-            Light tmp = 0;
+            Light tmp = {};
             tmp.isOn = l[r][c];
             tmp.groupNum = -1;
             lights[r][c] = tmp;
         }
     }
-
+    markGroups();
     //memcpy(lights, l, BOARD_SIZE * BOARD_SIZE * sizeof(bool));
 }
 
@@ -56,12 +57,17 @@ void LightBoard::markGroups()
     }
 }
 
-void LightBoard::markAround(int r, int c, int groupNum){
+void LightBoard::markAround(int r, int c, int groupNum)
+{
     lights[r][c].groupNum = groupNum;
-    if (lights[r-1][c].isOn) markAround(r-1, c, groupNum);
-    if (lights[r+1][c].isOn) markAround(r+1, c, groupNum);
-    if (lights[r][c-1].isOn) markAround(r, c-1, groupNum);
-    if (lights[r][c+1].isOn) markAround(r, c+1, groupNum);
+    if (trueAt(r - 1, c) && gNumAt(r-1, c) != groupNum)
+        markAround(r - 1, c, groupNum);
+    if (trueAt(r + 1, c) && gNumAt(r+1, c) != groupNum)
+        markAround(r + 1, c, groupNum);
+    if (trueAt(r, c - 1) && gNumAt(r, c-1) != groupNum)
+        markAround(r, c - 1, groupNum);
+    if (trueAt(r, c + 1) && gNumAt(r, c+1) != groupNum)
+        markAround(r, c + 1, groupNum);
 }
 
 bool LightBoard::trueAt(int r, int c)
@@ -71,38 +77,51 @@ bool LightBoard::trueAt(int r, int c)
     return lights[r][c].isOn;
 }
 
+int LightBoard::gNumAt(int r, int c)
+{
+    if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE)
+        return -1;
+    return lights[r][c].groupNum;
+}
+
 int LightBoard::getNumEdges()
 {
     int total = 0;
     //all vals start as 0
-    int vertices[BOARD_SIZE + 1][BOARD_SIZE + 1] = {-1};
-    int groupNum = 0 for (int row = 0; row < BOARD_SIZE; row++)
+    int vertices[BOARD_SIZE + 1][BOARD_SIZE + 1];
+    for (int r = 0; r < BOARD_SIZE+1; r++){
+        for (int c=0; c < BOARD_SIZE+1; c++){
+            vertices[r][c] = -1;
+        }
+    }
+    for (int row = 0; row < BOARD_SIZE; row++)
     {
         for (int col = 0; col < BOARD_SIZE; col++)
         {
-            if (lights[row][col])
+            if (!lights[row][col].isOn)
+                continue;
+            int currGroupNum = lights[row][col].groupNum;
+            //only flip if no element across diagonal FROM SAME GROUP
+            if (!trueAt(row - 1, col - 1) || gNumAt(row - 1, col - 1) != currGroupNum)
             {
-                //only flip if no element across diagonal FROM SAME GROUP
-                if (!(trueAt(row - 1, col - 1) && lights[row-1][col-1].groupNum == lights[row][col].groupNum)){
-                    vertices[row][col] = lights[row][col].groupNum;
-                }
-                    
-                if (!trueAt(row + 1, col - 1))
-                    vertices[row + 1][col] = !vertices[row + 1][col];
-                if (!trueAt(row + 1, col + 1))
-                    vertices[row + 1][col + 1] = !vertices[row + 1][col + 1];
-                if (!trueAt(row - 1, col + 1))
-                    vertices[row][col + 1] = !vertices[row][col + 1];
+                total += vertices[row][col] == currGroupNum ? -1 : 1;
+                vertices[row][col] = currGroupNum;
             }
-        }
-    }
-    //yes, this could probably be done in better O(n) time, but the code looks nice this way
-    for (int r = 0; r < BOARD_SIZE + 1; r++)
-    {
-        for (int c = 0; c < BOARD_SIZE + 1; c++)
-        {
-            if (vertices[r][c])
-                total++;
+            if (!trueAt(row + 1, col - 1) || gNumAt(row + 1, col - 1) != currGroupNum)
+            {
+                total += vertices[row + 1][col] == currGroupNum ? -1 : 1;
+                vertices[row+1][col] = currGroupNum;
+            }
+            if (!trueAt(row + 1, col + 1) || gNumAt(row + 1, col + 1) != currGroupNum)
+            {
+                total += vertices[row + 1][col + 1] == currGroupNum ? -1 : 1;
+                vertices[row+1][col+1] = currGroupNum;
+            }
+            if (!trueAt(row - 1, col + 1) || gNumAt(row - 1, col + 1) != currGroupNum)
+            {
+                total += vertices[row][col + 1] == currGroupNum ? -1 : 1;
+                vertices[row][col+1] = currGroupNum;
+            }
         }
     }
     return total;
