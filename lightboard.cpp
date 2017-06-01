@@ -1,30 +1,8 @@
 #include <iostream>
-#include <ctime>
-#include <cstdlib>
 #include <cstring>
+#include "lightboard.h"
+
 using namespace std;
-
-const int BOARD_SIZE = 6;
-
-struct Light
-{
-    bool isOn;
-    int groupNum;
-};
-
-class LightBoard
-{
-    Light lights[BOARD_SIZE][BOARD_SIZE];
-    void markGroups();
-    void markAround(int, int, int);
-    int gNumAt(int, int);
-
-  public:
-    LightBoard(bool[BOARD_SIZE][BOARD_SIZE]);
-    int getNumEdges();
-    void writeBoard();
-    bool trueAt(int, int);
-};
 
 LightBoard::LightBoard(bool l[BOARD_SIZE][BOARD_SIZE])
 {
@@ -60,13 +38,13 @@ void LightBoard::markGroups()
 void LightBoard::markAround(int r, int c, int groupNum)
 {
     lights[r][c].groupNum = groupNum;
-    if (trueAt(r - 1, c) && gNumAt(r-1, c) != groupNum)
+    if (trueAt(r - 1, c) && gNumAt(r - 1, c) != groupNum)
         markAround(r - 1, c, groupNum);
-    if (trueAt(r + 1, c) && gNumAt(r+1, c) != groupNum)
+    if (trueAt(r + 1, c) && gNumAt(r + 1, c) != groupNum)
         markAround(r + 1, c, groupNum);
-    if (trueAt(r, c - 1) && gNumAt(r, c-1) != groupNum)
+    if (trueAt(r, c - 1) && gNumAt(r, c - 1) != groupNum)
         markAround(r, c - 1, groupNum);
-    if (trueAt(r, c + 1) && gNumAt(r, c+1) != groupNum)
+    if (trueAt(r, c + 1) && gNumAt(r, c + 1) != groupNum)
         markAround(r, c + 1, groupNum);
 }
 
@@ -89,8 +67,10 @@ int LightBoard::getNumEdges()
     int total = 0;
     //all vals start as 0
     int vertices[BOARD_SIZE + 1][BOARD_SIZE + 1];
-    for (int r = 0; r < BOARD_SIZE+1; r++){
-        for (int c=0; c < BOARD_SIZE+1; c++){
+    for (int r = 0; r < BOARD_SIZE + 1; r++)
+    {
+        for (int c = 0; c < BOARD_SIZE + 1; c++)
+        {
             vertices[r][c] = -1;
         }
     }
@@ -110,17 +90,17 @@ int LightBoard::getNumEdges()
             if (!trueAt(row + 1, col - 1) || gNumAt(row + 1, col - 1) != currGroupNum)
             {
                 total += vertices[row + 1][col] == currGroupNum ? -1 : 1;
-                vertices[row+1][col] = currGroupNum;
+                vertices[row + 1][col] = currGroupNum;
             }
             if (!trueAt(row + 1, col + 1) || gNumAt(row + 1, col + 1) != currGroupNum)
             {
                 total += vertices[row + 1][col + 1] == currGroupNum ? -1 : 1;
-                vertices[row+1][col+1] = currGroupNum;
+                vertices[row + 1][col + 1] = currGroupNum;
             }
             if (!trueAt(row - 1, col + 1) || gNumAt(row - 1, col + 1) != currGroupNum)
             {
                 total += vertices[row][col + 1] == currGroupNum ? -1 : 1;
-                vertices[row][col+1] = currGroupNum;
+                vertices[row][col + 1] = currGroupNum;
             }
         }
     }
@@ -142,21 +122,23 @@ void LightBoard::writeBoard()
     }
 }
 
-int main()
+void LightBoard::toggle(int r, int c)
 {
-    bool lights[BOARD_SIZE][BOARD_SIZE];
-    srand(time(NULL));
-    for (int row = 0; row < BOARD_SIZE; row++)
+    for (int a = -1; a < 2; a++)
     {
-        for (int col = 0; col < BOARD_SIZE; col++)
+        if (r + a < 0 || r + a >= BOARD_SIZE)
+            continue;
+        for (int b = -1; b < 2; b++)
         {
-            lights[row][col] = false;
-            if (rand() % 2)
-                lights[row][col] = true;
+            if (c + b < 0 || c + b >= BOARD_SIZE)
+                continue;
+            if (lights[r+a][c+b].isOn){
+                lights[r+a][c+b].isOn = false;
+                lights[r+a][c+b].groupNum = -1;
+            } else {
+                lights[r+a][c+b].isOn = true;
+            }
         }
     }
-    LightBoard l(lights);
-    cout << l.getNumEdges() << '\n';
-    l.writeBoard();
-    return 0;
+    markGroups();
 }
