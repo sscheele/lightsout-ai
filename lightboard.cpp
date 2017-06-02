@@ -22,12 +22,20 @@ LightBoard::LightBoard(bool l[BOARD_SIZE][BOARD_SIZE])
 
 void LightBoard::markGroups()
 {
-    int groupNum = 0;
+    //GROUP NUMBER MEANINGS: -1 empty, 0 unassigned, 1+ assigned
+    int groupNum = 1;
     for (int r = 0; r < BOARD_SIZE; r++)
     {
         for (int c = 0; c < BOARD_SIZE; c++)
         {
-            if (!lights[r][c].isOn || lights[r][c].groupNum != -1)
+            if (lights[r][c].isOn) lights[r][c].groupNum = 0;
+        }
+    }
+    for (int r = 0; r < BOARD_SIZE; r++)
+    {
+        for (int c = 0; c < BOARD_SIZE; c++)
+        {
+            if (!lights[r][c].isOn || lights[r][c].groupNum > 0)
                 continue;
             markAround(r, c, groupNum);
             groupNum++;
@@ -117,6 +125,18 @@ void LightBoard::writeBoard()
                 cout << "1 ";
             else
                 cout << "0 ";
+        }
+        cout << '\n';
+    }
+}
+
+void LightBoard::writeGroupNums()
+{
+    for (int row = 0; row < BOARD_SIZE; row++)
+    {
+        for (int col = 0; col < BOARD_SIZE; col++)
+        {
+            cout << lights[row][col].groupNum << " ";
         }
         cout << '\n';
     }

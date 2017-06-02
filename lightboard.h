@@ -20,6 +20,7 @@ class LightBoard
     LightBoard(bool[BOARD_SIZE][BOARD_SIZE]);
     int getNumEdges();
     void writeBoard();
+    void writeGroupNums();
     bool trueAt(int, int);
     void toggle(int, int);
 };
